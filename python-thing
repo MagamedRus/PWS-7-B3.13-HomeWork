@@ -1,0 +1,170 @@
+def add_attr(klass, idr, src, attrs): # для добавления класса в словарь
+	if klass is not None: 
+		attrs["class"] = "".join(klass)
+	if idr is not None:
+		attrs["id"] = "".join(idr)
+	if src is not None:
+		attrs["src"] = "".join(src)
+	for attr, value in attrs.items(): #меняем "_" на "-"
+			if "_" in value:
+				value = value.replace("_", "-")
+				attrs[attr] = (value)
+	return attrs
+
+
+
+class Tag: 
+	def __init__(self, tag, klass = None, idr = None, src = None, is_single = False, **kwargs):
+		self.tag = tag
+		self.text = ""
+		self.attributes = {}
+		self.is_single = is_single
+		add_attr(klass, idr, src, self.attributes)
+
+	def __str__(self):
+		attrs = []
+
+		for attribute, value in self.attributes.items():
+			attrs.append('%s="%s"' % (attribute, value))
+		attrs = " ".join(attrs)
+
+		if self.attributes != {}:
+			return ("<{tag} {attrs}>\n{text}\n</{tag}>\n").format(tag = self.tag, attrs = attrs, text = self.text)
+		else: 
+			return ("<{tag}>\n{text}\n</{tag}>\n").format(tag = self.tag, text = self.text)
+
+
+	def __add__(self, other):
+		attrs = []
+
+		for attribute, value in self.attributes.items():
+			attrs.append('%s="%s"' % (attribute, value))
+		attrs = "".join(attrs)
+
+		if self.is_single:
+			return ("<" + self.tag + " " + attrs + ">" + other + "\n")
+		else:
+			return ("<" + self.tag + " " + attrs + ">" + other + "</" + self.tag + ">" + "\n")		
+
+
+
+
+	def __enter__(self):
+		return self
+	def __exit__(self, smth, error, anyghing):
+		return self
+
+
+
+class TopLevelTag:
+	def __init__(self, tag, klass = None, idr = None, src = None, **kwargs):
+		self.tag = tag
+		self.attributes = {}
+		self.text = ""
+		add_attr(klass, idr, src, self.attributes)
+
+	def __str__(self):
+		attrs = []
+
+		for attribute, value in self.attributes.items():
+			attrs.append('%s="%s"' % (attribute, value))
+		attrs = "".join(attrs)
+
+		if self.attributes != {}:
+			return ("<{tag} {attrs}>\n    {text}\n</{tag}>").format(tag = self.tag, attrs = attrs, text = self.text)
+		else: 
+			return ("<{tag}>\n    {text}\n</{tag}>").format(tag = self.tag, text = self.text)
+
+	def __add__(self, other):
+		if self.attributes == {}:
+			return ("<" + self.tag + ">" + "    \n" + self.text + "\n" + other + "\n</" + self.tag + ">\n")
+		else:
+			return ("<" + self.tag + " " + self.attributes + ">" + "    \n" + self.text + "\n" + other + "\n</" + self.tag + ">\n")
+
+	def __enter__(self):
+		return self
+	def __exit__(self, smth, error, anyghing):
+		return self
+
+
+
+
+
+class HTML:
+	def __init__(self, output = None):
+		self.output = output
+		self.items = ""
+	def __str__(self):
+		return self
+
+			
+	def __add__(self, other):
+		if self.output is None:
+			return (self.items + other)
+		# else:
+		# 	n_file = 'ips.txt'
+		# 	o_file = open(n_file, "w")
+		# 	for 
+		# 	return	o_file.write(self)
+		# 	o_file.close()	
+
+	def __enter__(self):
+		return self
+	def __exit__(self, dummy, smth, anthng):
+		return self
+
+
+
+
+doc = HTML(output=None)
+head = TopLevelTag("head")
+title = Tag("title")
+title.text = "hello"
+head = head + str(title)
+doc = doc + str(head)
+body = TopLevelTag("body")
+h1 = Tag("h1", klass=("main-text",))
+h1.text = "Test"
+body = body + str(h1)
+div = Tag("div", klass=("container", "container-fluid"), id="lead")
+paragraph = Tag("p")
+paragraph.text = "another test"
+div = div + str(paragraph)
+img = Tag("img", is_single=True, src="/icon.png")
+div = div + str(img)
+body = body + str(div)
+doc = doc + str(body)
+print(doc)
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    with HTML(output=None) as doc:
+        with TopLevelTag("head") as head:
+            with Tag("title") as title:
+                title.text = "hello"
+                head += title
+            doc += head
+
+        with TopLevelTag("body") as body:
+            with Tag("h1", klass=("main-text",)) as h1:
+                h1.text = "Test"
+                body += h1
+
+            with Tag("div", klass=("container", "container-fluid"), id="lead") as div:
+                with Tag("p") as paragraph:
+                    paragraph.text = "another test"
+                    div += paragraph
+
+                with Tag("img", is_single=True, src="/icon.png") as img:
+                    div += img
+
+                body += div
+
+            doc += body
+            print(doc)
+
